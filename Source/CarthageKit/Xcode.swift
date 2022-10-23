@@ -923,18 +923,7 @@ private func build(
 		// Specifying destination seems to be required for building with
 		// simulator SDKs since Xcode 7.2.
 		if sdk.isSimulator {
-			let destinationLookup = Task("/usr/bin/xcrun", arguments: [ "simctl", "list", "devices", "--json" ])
-			return destinationLookup.launch()
-				.mapError(CarthageError.taskError)
-				.ignoreTaskData()
-				.flatMap(.concat) { (data: Data) -> SignalProducer<Simulator, CarthageError> in
-					if let selectedSimulator = selectAvailableSimulator(of: sdk, from: data) {
-						return .init(value: selectedSimulator)
-					} else {
-						return .init(error: CarthageError.noAvailableSimulators(platformName: sdk.platformSimulatorlessFromHeuristic))
-					}
-				}
-				.map { "platform=\(sdk.platformSimulatorlessFromHeuristic) Simulator,id=\($0.udid.uuidString)" }
+			return SignalProducer(value: "generic/platform=\(sdk.platformSimulatorlessFromHeuristic) Simulator")
 		}
 		return SignalProducer(value: nil)
 	}
